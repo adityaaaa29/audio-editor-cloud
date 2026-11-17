@@ -1,4 +1,3 @@
-
 import os
 import shutil
 import subprocess
@@ -168,17 +167,18 @@ def edit():
         if not output.exists() or output.stat().st_size == 0:
             raise RuntimeError("File hasil kosong.")
 
-        @after_this_request
-        def cleanup(response):
-            shutil.rmtree(folder, ignore_errors=True)
-            return response
-
-        return send_file(
+                response = send_file(
             output,
             as_attachment=True,
             download_name="hasil_audio_2x.ogg",
             mimetype="audio/ogg"
         )
+
+        response.call_on_close(
+            lambda: shutil.rmtree(folder, ignore_errors=True)
+        )
+
+        return response
 
     except Exception as exc:
         shutil.rmtree(folder, ignore_errors=True)
